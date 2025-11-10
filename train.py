@@ -13,17 +13,20 @@ import math
 import config
 from tokenizer import ensure_char_tokenizer, ensure_spm_tokenizer
 from data import LanguageModelDataset
-from model import LSTMModel
+from model import LSTMModel, TransformerDecoderOnly
 
 def train_epoch(model, dataloader, optimizer, criterion, device):
     """Runs one full epoch of training."""
     model.train()
-    total_loss = 0
+    total_loss = 0.0
     start_time = time.time()
     
     # Initialize hidden state at the beginning of the epoch
     # We detach it to prevent backpropping through all of time
-    hidden = model.init_hidden(config.BATCH_SIZE, device)
+    # LSTM needs hidden; Transformer doesn't
+    use_lstm = hasattr(model, "init_hidden")
+    if use_lstm:
+        hidden = model.init_hidden(config.BATCH_SIZE, device)
 
     for i, (x, y) in enumerate(dataloader):
         # Ensure batch size is consistent, drop last batch if it's smaller
@@ -32,13 +35,16 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
             
         x, y = x.to(device), y.to(device)
         
-        # Detach the hidden state from the previous batch's history
-        hidden = (hidden[0].detach(), hidden[1].detach())
-        
         # --- Forward pass ---
         optimizer.zero_grad()
-        logits, hidden = model(x, hidden)
         
+        if use_lstm:
+            # Detach the hidden state from the previous batch's history
+            hidden = (hidden[0].detach(), hidden[1].detach())
+            logits, hidden = model(x, hidden)             # (B, T, V)
+        else:
+            logits = model(x)                              # (B, T, V)
+
         # --- Compute Loss ---
         # CrossEntropyLoss expects logits as (N, C) and labels as (N)
         # We flatten the (batch_size, seq_len, vocab_size) and (batch_size, seq_len) tensors
@@ -65,9 +71,11 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
 def evaluate(model, dataloader, criterion, device):
     """Runs evaluation on the validation set."""
     model.eval()
-    total_loss = 0
+    total_loss = 0.0
     
-    hidden = model.init_hidden(config.BATCH_SIZE, device)
+    use_lstm = hasattr(model, "init_hidden")
+    if use_lstm:
+        hidden = model.init_hidden(config.BATCH_SIZE, device)
 
     with torch.no_grad(): # disable gradient calculation
         for x, y in dataloader:
@@ -75,9 +83,13 @@ def evaluate(model, dataloader, criterion, device):
                 continue
                 
             x, y = x.to(device), y.to(device)
-            hidden = (hidden[0].detach(), hidden[1].detach())
-            
-            logits, hidden = model(x, hidden)
+
+            if use_lstm:
+                hidden = (hidden[0].detach(), hidden[1].detach())
+                logits, hidden = model(x, hidden)
+            else:
+                logits = model(x)
+
             loss = criterion(logits.view(-1, model.vocab_size), y.view(-1))
             total_loss += loss.item()
 
@@ -110,19 +122,33 @@ def main():
     valid_dataset = LanguageModelDataset(valid_data_path, tokenizer, config.SEQ_LEN, config.DEBUG_MAX_LINES)
     
     # drop_last=True is important to ensure all batches have config.BATCH_SIZE
-    train_loader = DataLoader(train_dataset, batch_size=config.BATCH_SIZE, shuffle=True, drop_last=True)
-    valid_loader = DataLoader(valid_dataset, batch_size=config.BATCH_SIZE, shuffle=False, drop_last=True)
+    train_loader = DataLoader(train_dataset, batch_size=config.BATCH_SIZE, shuffle=True, drop_last=True, num_workers=config.NUM_WORKERS)
+    valid_loader = DataLoader(valid_dataset, batch_size=config.BATCH_SIZE, shuffle=False, drop_last=True, num_workers=config.NUM_WORKERS)
 
-    # --- 3. Initialize Model ---
-    model = LSTMModel(
-        vocab_size=vocab_size,
-        embed_dim=config.EMBED_DIM,
-        hidden_dim=config.HIDDEN_DIM,
-        num_layers=config.NUM_LAYERS,
-        dropout=config.DROPOUT,
-        tokenizer=tokenizer
-    ).to(config.DEVICE)
-    
+# --- 3. Initialize Model ---
+    if config.MODEL_ARCH == "lstm":
+        model = LSTMModel(
+            vocab_size=vocab_size,
+            embed_dim=config.EMBED_DIM,
+            hidden_dim=config.HIDDEN_DIM,
+            num_layers=config.NUM_LAYERS,
+            dropout=config.DROPOUT,
+            tokenizer=tokenizer
+        ).to(config.DEVICE)
+        
+    elif config.MODEL_ARCH == "transformer":
+        model = TransformerDecoderOnly(
+            vocab_size=vocab_size,
+            d_model=config.TX_D_MODEL,
+            n_layer=config.TX_N_LAYER,
+            n_head=config.TX_N_HEAD,
+            d_ff=config.TX_D_FF,
+            dropout=config.TX_DROPOUT,
+            pad_id=tokenizer.pad_id
+        ).to(config.DEVICE)
+    else:
+        raise ValueError(f"Unknown MODEL_ARCH={config.MODEL_ARCH}")
+
     print(f"Model created. Total parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
 
     # --- 4. Training Setup ---

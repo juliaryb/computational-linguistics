@@ -212,3 +212,5 @@ data/speakleash_raw
 old
 data
 best_lstm_model.pth
+tokenizers
+logs

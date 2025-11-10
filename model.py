@@ -1,8 +1,10 @@
 """
 Contains the LSTM model architecture.
 """
+import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class LSTMModel(nn.Module):
     def __init__(self, vocab_size: int, embed_dim: int, hidden_dim: int, num_layers: int, dropout: float = 0.1, tokenizer = None):
@@ -58,3 +60,97 @@ class LSTMModel(nn.Module):
             torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=device),
             torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=device)
         )
+
+
+
+# --- Positional Encoding (sinusoidal) ---
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model: int, max_len: int = 4096, dropout: float = 0.0):
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        pe = torch.zeros(max_len, d_model)                        # (T, C)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0)/d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0)                                      # (1, T, C) for batch_first
+        self.register_buffer("pe", pe, persistent=False)
+
+    def forward(self, x):                                          # x: (B, T, C)
+        x = x + self.pe[:, :x.size(1), :]
+        return self.dropout(x)
+
+# worked but gave warning
+# def causal_mask(T: int, device):
+#     # (T, T) with -inf above main diagonal (no looking ahead)
+#     m = torch.full((T, T), float("-inf"), device=device)
+#     return torch.triu(m, diagonal=1)
+
+def causal_mask(T: int, device):
+    # boolean mask: True where attention is NOT allowed (future positions)
+    # shape (T, T)
+    return torch.triu(torch.ones(T, T, dtype=torch.bool, device=device), diagonal=1)
+
+class DecoderBlock(nn.Module):
+    def __init__(self, d_model: int, n_head: int, d_ff: int, dropout: float):
+        super().__init__()
+        self.self_attn = nn.MultiheadAttention(
+            embed_dim=d_model, num_heads=n_head, dropout=dropout, batch_first=True
+        )
+        self.ln1 = nn.LayerNorm(d_model)
+        self.ff = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Linear(d_ff, d_model),
+        )
+        self.ln2 = nn.LayerNorm(d_model)
+        self.drop = nn.Dropout(dropout)
+
+    def forward(self, x, attn_mask=None, key_padding_mask=None):
+        # x: (B, T, C)
+        # MHA returns (B, T, C)
+        attn_out, _ = self.self_attn(
+            x, x, x, attn_mask=attn_mask, key_padding_mask=key_padding_mask, need_weights=False
+        )
+        x = self.ln1(x + self.drop(attn_out))
+        ff_out = self.ff(x)
+        x = self.ln2(x + self.drop(ff_out))
+        return x
+
+class TransformerDecoderOnly(nn.Module):
+    """
+    Simple GPT-like decoder-only LM:
+      Embedding + PosEnc + N x (SelfAttn + FFN) + LM head
+    """
+    def __init__(self, vocab_size: int, d_model: int, n_layer: int, n_head: int, d_ff: int,
+                 dropout: float = 0.1, pad_id: int = 0):
+        super().__init__()
+        self.vocab_size = vocab_size
+        self.pad_id = pad_id
+        self.embed = nn.Embedding(vocab_size, d_model, padding_idx=pad_id)
+        self.posenc = PositionalEncoding(d_model, dropout=dropout)
+        self.blocks = nn.ModuleList([
+            DecoderBlock(d_model, n_head, d_ff, dropout) for _ in range(n_layer)
+        ])
+        self.ln_f = nn.LayerNorm(d_model)
+        self.lm_head = nn.Linear(d_model, vocab_size, bias=False)
+
+        # Weight tying (optional but helps)
+        self.lm_head.weight = self.embed.weight
+
+    def forward(self, x):                         # x: (B, T) token ids
+        B, T = x.shape
+        h = self.embed(x)                         # (B, T, C)
+        h = self.posenc(h)                        # (B, T, C)
+
+        # boolean mask
+        attn_mask = causal_mask(T, x.device)
+
+        # key_padding_mask: True for pads to be masked out in attention
+        key_padding_mask = (x == self.pad_id)     # (B, T), bool
+
+        for blk in self.blocks:
+            h = blk(h, attn_mask=attn_mask, key_padding_mask=key_padding_mask)
+        h = self.ln_f(h)                          # (B, T, C)
+        logits = self.lm_head(h)                  # (B, T, V)
+        return logits

@@ -82,7 +82,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         prompt = sys.argv[1]
     else:
-        prompt = "This is"
+        prompt = "Tutaj jakiś prompt"
     
     print(f"--- Loading model from {config.MODEL_SAVE_PATH} ---")
     

@@ -1,3 +1,4 @@
+# train.py
 """
 Main training script for the LSTM Language Model.
 """
@@ -59,7 +60,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
     avg_loss = total_loss / len(dataloader)
     elapsed = time.time() - start_time
     print(f"  > Train Epoch Time: {elapsed:.2f}s")
-    return avg_loss
+    return avg_loss, elapsed
 
 def evaluate(model, dataloader, criterion, device):
     """Runs evaluation on the validation set."""
@@ -130,22 +131,63 @@ def main():
     
     best_val_perplexity = float("inf")
     
+    # --- logging csv for metrics ---
+    import csv
+
+    csv_dir = os.path.dirname(config.LOG_CSV)
+    if csv_dir:
+        os.makedirs(csv_dir, exist_ok=True)
+
+    csv_exists = os.path.exists(config.LOG_CSV)
+    csvf = open(config.LOG_CSV, "a", newline="", encoding="utf-8")
+    csvw = csv.writer(csvf)
+    if not csv_exists:
+        csvw.writerow(["epoch", "train_loss", "train_ppl", "val_loss", "val_ppl", "epoch_time_sec"])
+
     # --- 5. Training Loop ---
     print("\n--- Starting Training ---")
     for epoch in range(1, config.EPOCHS + 1):
         print(f"\n[Epoch {epoch}/{config.EPOCHS}]")
-        
-        train_loss = train_epoch(model, train_loader, optimizer, criterion, config.DEVICE)
+
+        train_loss, train_time = train_epoch(model, train_loader, optimizer, criterion, config.DEVICE)
         print(f"  > End of Epoch, Train Loss: {train_loss:.4f}")
         
         val_loss, val_perplexity = evaluate(model, valid_loader, criterion, config.DEVICE)
         print(f"  > Validation Loss: {val_loss:.4f}, Validation Perplexity: {val_perplexity:.4f}")
         
+        print(f"  > Epoch Time (train+val): {train_time:.2f}s")
+
+        # Write metrics to CSV (train_ppl = exp(train_loss))
+        csvw.writerow([epoch, train_loss, math.exp(train_loss), val_loss, val_perplexity, train_time])
+        csvf.flush()
+
         # Save the model if it has the best perplexity so far
         if val_perplexity < best_val_perplexity:
             best_val_perplexity = val_perplexity
             torch.save(model.state_dict(), config.MODEL_SAVE_PATH)
             print(f"  > New best model saved to {config.MODEL_SAVE_PATH} (Perplexity: {val_perplexity:.4f})")
-            
+    
+    csvf.close()        
     print("--- Training Finished ---")
     print(f"Best validation perplexity: {best_val_perplexity:.4f}")
+
+if __name__ == "__main__":
+    # Create dummy data files if they don't exist, for a quick test
+    train_path = os.path.join(config.DATA_DIR, config.TRAIN_FILE)
+    valid_path = os.path.join(config.DATA_DIR, config.VALID_FILE)
+    
+    if not os.path.exists(train_path):
+        print(f"Creating dummy file: {train_path}")
+        with open(train_path, "w", encoding="utf-8") as f:
+            f.write("This is a simple text file for training the language model.\n")
+            f.write("It has several lines.\n")
+            f.write("The quick brown fox jumps over the lazy dog.\n" * 100)
+            
+    if not os.path.exists(valid_path):
+        print(f"Creating dummy file: {valid_path}")
+        with open(valid_path, "w", encoding="utf-8") as f:
+            f.write("This is a separate validation file.\n")
+            f.write("It helps check for overfitting.\n")
+            f.write("Pack my box with five dozen liquor jugs.\n" * 50)
+            
+    main()

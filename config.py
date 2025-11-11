@@ -57,8 +57,8 @@ TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "sentence-piece") if TOKENIZER_TYPE
 # MODEL SELECTION
 # -----------------------
 # Which model to train: "lstm" or "transformer"
-MODEL_ARCH = "lstm"
-# MODEL_ARCH = "transformer"
+# MODEL_ARCH = "lstm"
+MODEL_ARCH = "transformer"
 
 # -----------------------
 # LSTM HYPERPARAMS
@@ -73,8 +73,8 @@ DROPOUT    = 0.1
 # -----------------------
 TX_D_MODEL = 128
 TX_N_HEAD  = 8
-TX_N_LAYER = 2
-TX_D_FF    = 256
+TX_N_LAYER = 4
+TX_D_FF    = 1024
 TX_DROPOUT = 0.1
 
 # -----------------------

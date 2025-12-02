@@ -11,9 +11,12 @@ import math
 
 # Import from our other files
 import config
-from tokenizer import ensure_char_tokenizer, ensure_spm_tokenizer
+from tokenizer import ensure_char_tokenizer, ensure_spm_tokenizer, ensure_whitespace_tokenizer, ensure_pretrained_tokenizer
 from data import LanguageModelDataset
 from model import LSTMModel, TransformerDecoderOnly
+
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def train_epoch(model, dataloader, optimizer, criterion, device):
     """Runs one full epoch of training."""
@@ -103,13 +106,17 @@ def main():
     
     # --- 1. Load Tokenizer ---
     train_data_path = os.path.join(config.DATA_DIR, config.TRAIN_FILE)
-    tokenizer_path = os.path.join(config.DATA_DIR, config.TOKENIZER_FILE)
+    tokenizer_path = config.TOKENIZER_FILE
     
     # trains a tokenizer if it doesn't exist
     if config.TOKENIZER_TYPE == "char":
         tokenizer = ensure_char_tokenizer(train_data_path, tokenizer_path)
     elif config.TOKENIZER_TYPE == "spm":
         tokenizer = ensure_spm_tokenizer(train_data_path, tokenizer_path)
+    elif config.TOKENIZER_TYPE == "wspc":
+        tokenizer = ensure_whitespace_tokenizer(train_data_path, tokenizer_path, 8000)
+    elif config.TOKENIZER_TYPE == "pre":
+        tokenizer = ensure_pretrained_tokenizer()
     else:
         raise ValueError(f"Unknown TOKENIZER_TYPE={config.TOKENIZER_TYPE}")
     

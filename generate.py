@@ -4,7 +4,7 @@ Script for generating text from a trained model.
 import torch
 import torch.nn.functional as F
 import config
-from tokenizer import ensure_char_tokenizer, ensure_spm_tokenizer
+from tokenizer import ensure_char_tokenizer, ensure_spm_tokenizer, ensure_whitespace_tokenizer, ensure_pretrained_tokenizer
 from model import LSTMModel, TransformerDecoderOnly
 import sys
 import os
@@ -118,23 +118,33 @@ if __name__ == "__main__":
     print(f"--- Loading model from {config.MODEL_SAVE_PATH} ---")
     
     # --- 1. Load Tokenizer ---
-    # Construct the full path just like in train.py
-    tokenizer_path = os.path.join(config.DATA_DIR, config.TOKENIZER_FILE)
-    tokenizer_path_ext = (tokenizer_path + ".json" 
-                          if config.TOKENIZER_TYPE == "char" 
-                          else tokenizer_path + ".model")
-
-    if not os.path.exists(tokenizer_path_ext):
-        print(f"Error: Tokenizer file not found at {tokenizer_path_ext}")
-        print("Please run `python train.py` first to create a tokenizer.")
-        sys.exit(1)
-    
-    if config.TOKENIZER_TYPE == "char":
-        tokenizer = ensure_char_tokenizer("dummy_filepath", tokenizer_path)
-    elif config.TOKENIZER_TYPE == "spm":
-        tokenizer = ensure_spm_tokenizer("dummy_filepath", tokenizer_path)
+    if config.TOKENIZER_TYPE == "pre":
+        tokenizer = ensure_pretrained_tokenizer()
     else:
-        raise ValueError(f"Unknown TOKENIZER_TYPE={config.TOKENIZER_TYPE}")
+        tokenizer_path = config.TOKENIZER_FILE
+
+        if config.TOKENIZER_TYPE == "char":
+            tokenizer_path_ext = tokenizer_path + ".json"
+        elif config.TOKENIZER_TYPE == "spm":
+            tokenizer_path_ext = tokenizer_path + ".model"
+        elif config.TOKENIZER_TYPE == "wspc":
+            tokenizer_path_ext = tokenizer_path + ".whitespace.json"
+        else:
+            raise ValueError(f"Unknown TOKENIZER_TYPE={config.TOKENIZER_TYPE}")
+
+        if not os.path.exists(tokenizer_path_ext):
+            print(f"Error: Tokenizer file not found at {tokenizer_path_ext}")
+            print("Please run `python train.py` first to create a tokenizer.")
+            sys.exit(1)
+    
+        if config.TOKENIZER_TYPE == "char":
+            tokenizer = ensure_char_tokenizer("dummy_filepath", tokenizer_path)
+        elif config.TOKENIZER_TYPE == "spm":
+            tokenizer = ensure_spm_tokenizer("dummy_filepath", tokenizer_path)
+        elif config.TOKENIZER_TYPE == "wspc":
+            tokenizer = ensure_whitespace_tokenizer("dummy_filepath", tokenizer_path, 8000)
+        else:
+            raise ValueError(f"Unknown TOKENIZER_TYPE={config.TOKENIZER_TYPE}")
     
     vocab_size = tokenizer.get_vocab_size()
     

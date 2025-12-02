@@ -47,11 +47,23 @@ VALID_PATH = os.path.join(DATA_DIR, VALID_FILE)
 # -----------------------
 # Choose: "spm" (SentencePiece) or "char"
 # TOKENIZER_TYPE = "char"  # change to "spm" when you want BPE
-TOKENIZER_TYPE = "spm"  # change to "spm" when you want BPE
+TOKENIZER_TYPE = "wspc"  # change to "spm" when you want BPE
+PRETRAINED_MODEL_NAME = "mistralai/Mistral-7B-v0.1" 
+
 # Tokenizer model *prefix* (no extension) — both envs share the same variable
 # CharTokenizer will use "<prefix>.json"; SentencePiece uses "<prefix>.model"
-TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "sentence-piece") if TOKENIZER_TYPE == "spm" \
-                 else os.path.join(TOKENIZER_DIR, "char_tokenizer")
+if TOKENIZER_TYPE == "spm":
+    TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "sentence-piece")
+elif TOKENIZER_TYPE == "char":
+    TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "char_tokenizer")
+elif TOKENIZER_TYPE == "wspc":
+    TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "whitespace_tokenizer")
+elif TOKENIZER_TYPE == "pre":
+    TOKENIZER_FILE = None # load from Hugging Face
+
+
+# TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "sentence-piece") if TOKENIZER_TYPE == "spm" \
+#                  elif TOKENIZER_TYPE == "char" os.path.join(TOKENIZER_DIR, "char_tokenizer")
 
 # -----------------------
 # MODEL SELECTION

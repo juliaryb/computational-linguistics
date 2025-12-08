@@ -224,7 +224,12 @@ class CharTokenizer:
         return self.vocab_size
 
 class SPMTokenizer:
-    def __init__(self, data_path: Optional[str] = None, save_path: Optional[str] = None):
+    def __init__(
+            self, 
+            data_path: Optional[str] = None, 
+            save_path: Optional[str] = None,
+            vocab_size: Optional[int] = None
+            ):
         self.sp = spm.SentencePieceProcessor()
         model_path = f"{save_path}.model" if save_path else None
 
@@ -236,7 +241,7 @@ class SPMTokenizer:
                 f"--input={data_path}",
                 f"--model_prefix={save_path}",
                 "--model_type=unigram",
-                "--vocab_size=8000",
+                f"--vocab_size={vocab_size}",
                 "--character_coverage=1.0",
                 "--normalization_rule_name=nfkc",
                 "--add_dummy_prefix=true",
@@ -282,8 +287,8 @@ def ensure_char_tokenizer(train_txt: str, save_prefix: str) -> CharTokenizer:
         _ = CharTokenizer(data_path=train_txt, save_path=save_prefix)
     return CharTokenizer(save_path=save_prefix)
 
-def ensure_spm_tokenizer(train_txt: str, save_prefix: str) -> SPMTokenizer:
+def ensure_spm_tokenizer(train_txt: str, save_prefix: str, vocab_size: int) -> SPMTokenizer:
     model_path = f"{save_prefix}.model"
     if not os.path.exists(model_path):
-        _ = SPMTokenizer(data_path=train_txt, save_path=save_prefix)
+        _ = SPMTokenizer(data_path=train_txt, save_path=save_prefix, vocab_size=vocab_size)
     return SPMTokenizer(save_path=save_prefix)

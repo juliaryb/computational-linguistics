@@ -207,7 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 # user-defined
-datasets
+local_datasets
 data/speakleash_raw
 old
 data

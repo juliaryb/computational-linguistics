@@ -215,3 +215,4 @@ best_lstm_model.pth
 tokenizers
 logs
 checkpoints
+lab3/lab3_logs

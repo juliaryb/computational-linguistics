@@ -11,7 +11,7 @@ def download_high_quality(dataset_name: str, out_path: str, limit=None):
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
     base_dir = "."
-    speakleash_dir = os.path.join(base_dir, "datasets")
+    speakleash_dir = os.path.join(base_dir, "local_datasets")
     os.makedirs(speakleash_dir, exist_ok=True)
 
     sl = Speakleash(speakleash_dir)

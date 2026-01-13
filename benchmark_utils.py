@@ -102,3 +102,107 @@ def print_qualitative_examples(model, tokenizer, prompt_text):
     print(f"IDs:      {encoded}")
     print(f"Count:    {len(encoded)} tokens")
     print("-" * 20)
+
+
+#################### LAB 4 ######################
+import torch
+import time
+from torch.utils.data import DataLoader
+
+
+def profile_one_training_step(
+    model,
+    optimizer,
+    criterion,
+    batch,
+    device,
+):
+    """
+    Profiles ONE forward + backward + optimizer step.
+    Returns:
+      step_time_sec,
+      mem_forward_mb,
+      mem_backward_mb,
+      peak_mem_mb
+    """
+    model.train()
+    x, y = batch
+    x, y = x.to(device), y.to(device)
+
+    torch.cuda.reset_peak_memory_stats()
+    torch.cuda.synchronize()
+
+    start = time.time()
+
+    optimizer.zero_grad()
+
+    # --- Forward ---
+    logits = model(x)
+    loss = criterion(logits.view(-1, model.vocab_size), y.view(-1))
+    torch.cuda.synchronize()
+    mem_forward = torch.cuda.memory_allocated() / 1024**2
+
+    # --- Backward ---
+    loss.backward()
+    torch.cuda.synchronize()
+    mem_backward = torch.cuda.memory_allocated() / 1024**2
+
+    optimizer.step()
+    torch.cuda.synchronize()
+
+    step_time = time.time() - start
+    peak_mem = torch.cuda.max_memory_allocated() / 1024**2
+
+    return step_time, mem_forward, mem_backward, peak_mem
+
+def find_max_batch_size(
+    make_model_fn,
+    dataset,
+    criterion,
+    device,
+    train_step_fn,
+    start_bs=1,
+    max_bs=8192,
+):
+    """
+    Generic batch size search:
+    - make_model_fn(): returns a *fresh* model
+    - train_step_fn(): runs ONE forward+backward step
+    """
+    bs = start_bs
+    last_ok = None
+
+    while bs <= max_bs:
+        try:
+            model = make_model_fn().to(device)
+            optimizer = torch.optim.Adam(model.parameters())
+
+            loader = DataLoader(
+                dataset,
+                batch_size=bs,
+                shuffle=True,
+                drop_last=True,
+            )
+            batch = next(iter(loader))
+
+            train_step_fn(
+                model=model,
+                optimizer=optimizer,
+                criterion=criterion,
+                batch=batch,
+                device=device,
+            )
+
+            last_ok = bs
+            bs *= 2
+
+            del model, optimizer, loader
+            torch.cuda.empty_cache()
+
+        except RuntimeError as e:
+            if "out of memory" in str(e).lower():
+                torch.cuda.empty_cache()
+                break
+            raise e
+
+    return last_ok

@@ -1,65 +1,13 @@
 /net/tscratch/people/plgjuliaryb
 On Athena
 /net/tscratch/people/plgjuliaryb/computational-linguistics-data
-Using device: cuda
-Model created. Total parameters: 2,343,680
-
---- Starting Training ---
-
-[Epoch 1/8]
-  > Train Epoch Time: 7.91s
-  > End of Epoch, Train Loss: 25.0914
-  > Validation Loss: 16.6361, Validation Perplexity: 16787108.5966
-  > Epoch Time (train+val): 7.91s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 16787108.5966)
-
-[Epoch 2/8]
-  > Train Epoch Time: 1.98s
-  > End of Epoch, Train Loss: 14.8018
-  > Validation Loss: 11.6738, Validation Perplexity: 117451.4048
-  > Epoch Time (train+val): 1.98s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 117451.4048)
-
-[Epoch 3/8]
-  > Train Epoch Time: 2.02s
-  > End of Epoch, Train Loss: 10.6560
-  > Validation Loss: 9.2198, Validation Perplexity: 10095.2569
-  > Epoch Time (train+val): 2.02s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 10095.2569)
-
-[Epoch 4/8]
-  > Train Epoch Time: 1.89s
-  > End of Epoch, Train Loss: 8.6315
-  > Validation Loss: 8.0008, Validation Perplexity: 2983.4384
-  > Epoch Time (train+val): 1.89s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 2983.4384)
-
-[Epoch 5/8]
-  > Train Epoch Time: 2.56s
-  > End of Epoch, Train Loss: 7.6491
-  > Validation Loss: 7.4972, Validation Perplexity: 1802.9195
-  > Epoch Time (train+val): 2.56s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 1802.9195)
-
-[Epoch 6/8]
-  > Train Epoch Time: 2.50s
-  > End of Epoch, Train Loss: 7.2254
-  > Validation Loss: 7.2349, Validation Perplexity: 1387.0499
-  > Epoch Time (train+val): 2.50s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 1387.0499)
-
-[Epoch 7/8]
-  > Train Epoch Time: 2.18s
-  > End of Epoch, Train Loss: 6.9878
-  > Validation Loss: 7.0870, Validation Perplexity: 1196.2568
-  > Epoch Time (train+val): 2.18s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 1196.2568)
-
-[Epoch 8/8]
-  > Train Epoch Time: 1.98s
-  > End of Epoch, Train Loss: 6.8306
-  > Validation Loss: 7.0047, Validation Perplexity: 1101.8470
-  > Epoch Time (train+val): 1.98s
-  > New best model saved to /net/tscratch/people/plgjuliaryb/computational-linguistics-data/checkpoints/best_tx_model.pth (Perplexity: 1101.8470)
---- Training Finished ---
-Best validation perplexity: 1101.8470
+Running BASELINE (FP32)
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size (FP32)...
+Max batch size (FP32): 512
+  > Train Epoch Time: 16.53s
+Baseline done.
+Mean step time: 0.2810s
+Peak memory: 34845.9 MB
+Val perplexity: 129488858.55

@@ -140,7 +140,7 @@ if __name__ == "__main__":
         if config.TOKENIZER_TYPE == "char":
             tokenizer = ensure_char_tokenizer("dummy_filepath", tokenizer_path)
         elif config.TOKENIZER_TYPE == "spm":
-            tokenizer = ensure_spm_tokenizer("dummy_filepath", tokenizer_path)
+            tokenizer = ensure_spm_tokenizer("dummy_filepath", tokenizer_path, 8000)
         elif config.TOKENIZER_TYPE == "wspc":
             tokenizer = ensure_whitespace_tokenizer("dummy_filepath", tokenizer_path, 8000)
         else:

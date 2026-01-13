@@ -33,8 +33,8 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
 
     for i, (x, y) in enumerate(dataloader):
         # Ensure batch size is consistent, drop last batch if it's smaller
-        if x.shape[0] != config.BATCH_SIZE:
-            continue
+        # if x.shape[0] != config.BATCH_SIZE:
+        #     continue
             
         x, y = x.to(device), y.to(device)
         
@@ -82,8 +82,8 @@ def evaluate(model, dataloader, criterion, device):
 
     with torch.no_grad(): # disable gradient calculation
         for x, y in dataloader:
-            if x.shape[0] != config.BATCH_SIZE:
-                continue
+            # if x.shape[0] != config.BATCH_SIZE:
+            #     continue
                 
             x, y = x.to(device), y.to(device)
 

@@ -52,6 +52,7 @@ VALID_PATH = os.path.join(DATA_DIR, VALID_FILE)
 TOKENIZER_TYPE = "spm"  # change to "spm" when you want BPE
 # TOKENIZER_TYPE = "wspc"  # change to "spm" when you want BPE
 # PRETRAINED_MODEL_NAME = "mistralai/Mistral-7B-v0.1" 
+VOCAB_SIZE = 12000
 
 # Tokenizer model *prefix* (no extension) — both envs share the same variable
 # CharTokenizer will use "<prefix>.json"; SentencePiece uses "<prefix>.model"
@@ -63,7 +64,6 @@ elif TOKENIZER_TYPE == "wspc":
     TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "whitespace_tokenizer")
 elif TOKENIZER_TYPE == "pre":
     TOKENIZER_FILE = None # load from Hugging Face
-
 
 # TOKENIZER_FILE = os.path.join(TOKENIZER_DIR, "sentence-piece") if TOKENIZER_TYPE == "spm" \
 #                  elif TOKENIZER_TYPE == "char" os.path.join(TOKENIZER_DIR, "char_tokenizer")
@@ -96,13 +96,13 @@ TX_DROPOUT = 0.1
 # TRAINING
 # -----------------------
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
-EPOCHS        = 8
+EPOCHS        = 1
 BATCH_SIZE    = 16
 LEARNING_RATE = 1e-3
 
 # sequence settings
 SEQ_LEN          = 256
-DEBUG_MAX_LINES  = 10000  # set to None for full data otherwise takes a subset of corpus
+DEBUG_MAX_LINES  = None  # set to None for full data otherwise takes a subset of corpus
 
 # DataLoader workers: more on Athena, modest locally
 if ON_ATHENA:

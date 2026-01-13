@@ -112,7 +112,7 @@ def main():
     if config.TOKENIZER_TYPE == "char":
         tokenizer = ensure_char_tokenizer(train_data_path, tokenizer_path)
     elif config.TOKENIZER_TYPE == "spm":
-        tokenizer = ensure_spm_tokenizer(train_data_path, tokenizer_path)
+        tokenizer = ensure_spm_tokenizer(train_data_path, tokenizer_path, 8000)
     elif config.TOKENIZER_TYPE == "wspc":
         tokenizer = ensure_whitespace_tokenizer(train_data_path, tokenizer_path, 8000)
     elif config.TOKENIZER_TYPE == "pre":

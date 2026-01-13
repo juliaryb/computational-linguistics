@@ -1,3 +1,5 @@
 # Course Task: Memory-Efficient Transformer Training Techniques
 
-- I am struggling with setup (of CUDA, venv, jobs, etc.) on Athena to use GPU, so I don't have any files to upload yet. Work in progress
+- I don't have a GPU locally, so I had to setup things on Athena, it took a while
+- The setup works now - training complete on CUDA-enabled GPU
+- the lab-related experiments are work in progress!!

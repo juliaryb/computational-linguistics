@@ -3,11 +3,11 @@
 #SBATCH -A plgar2025-gpu-a100
 #SBATCH -p plgrid-gpu-a100
 #SBATCH -N 1
-#SBATCH --tasks-per-node=4      # max P we'll use below
+#SBATCH --tasks-per-node=4
 #SBATCH --gres=gpu
 #SBATCH -t 00:10:00
-#SBATCH -o training-pipeline.out
-#SBATCH -e training-pipeline.err
+#SBATCH -o training-pipeline_%j.out
+#SBATCH -e training-pipeline_%j.err
 
 
 module purge
@@ -16,6 +16,8 @@ module load CUDA/12.1.1
 
 # activate environment
 source /net/tscratch/people/plgjuliaryb/venvs/comp-lingu/bin/activate
+
+# export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 cd ..
 # python train.py

@@ -1,0 +1,33 @@
+/net/tscratch/people/plgjuliaryb
+On Athena
+/net/tscratch/people/plgjuliaryb/computational-linguistics-data
+Flash attention successfully imported
+
+=== Running technique: fp32 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size...
+Max batch size: 512
+TRAIN: USE_BF16 = False
+  > Train Epoch Time: 16.83s
+fp32 done.
+Mean step time: 0.3294s
+Peak memory: 34824.2 MB
+Val perplexity: 11378891.84
+
+=== Running technique: fa2 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Using baseline batch size: 512
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 8.16s
+fa2 done.
+Mean step time: 0.2706s
+Peak memory: 21630.5 MB
+Val perplexity: 14515562.60
+
+=== Running technique: fa2 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size...
+Max batch size: 896

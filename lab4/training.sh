@@ -19,5 +19,4 @@ source /net/tscratch/people/plgjuliaryb/venvs/comp-lingu/bin/activate
 
 cd ..
 # python train.py
-# python generate.py "Jakby tak tylko pozowlić sobie cieszyć się białym puchem i"
 python run_baseline.py

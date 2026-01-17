@@ -1,13 +1,38 @@
 /net/tscratch/people/plgjuliaryb
 On Athena
 /net/tscratch/people/plgjuliaryb/computational-linguistics-data
-Running BASELINE (FP32)
+
+=== Running technique: fp32 ===
 Number of training sequences: 28049
 Number of validation sequences: 24965
-Searching for max batch size (FP32)...
-Max batch size (FP32): 512
-  > Train Epoch Time: 16.53s
-Baseline done.
-Mean step time: 0.2810s
+Searching for max batch size...
+Max batch size: 512
+TRAIN: USE_BF16 = False
+  > Train Epoch Time: 16.45s
+fp32 done.
+Mean step time: 0.2755s
 Peak memory: 34845.9 MB
-Val perplexity: 129488858.55
+Val perplexity: 331657764.05
+
+=== Running technique: bf16 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Using baseline batch size: 512
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 9.36s
+bf16 done.
+Mean step time: 0.1514s
+Peak memory: 23828.3 MB
+Val perplexity: 269192396.87
+
+=== Running technique: bf16 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size...
+Max batch size: 639
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 9.98s
+bf16 done.
+Mean step time: 0.1687s
+Peak memory: 29728.7 MB
+Val perplexity: 732139166.93

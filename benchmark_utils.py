@@ -4,6 +4,7 @@ import math
 import time
 from config import DEVICE, BATCH_SIZE
 
+
 def calculate_metrics(model, tokenizer, dataloader, raw_text_path, max_lines=None):
     """
     Calculates metrics on the exact same text subset used by the dataloader.
@@ -108,7 +109,8 @@ def print_qualitative_examples(model, tokenizer, prompt_text):
 import torch
 import time
 from torch.utils.data import DataLoader
-
+from torch.cuda.amp import autocast
+import config
 
 def profile_one_training_step(
     model,
@@ -137,8 +139,20 @@ def profile_one_training_step(
     optimizer.zero_grad()
 
     # --- Forward ---
-    logits = model(x)
-    loss = criterion(logits.view(-1, model.vocab_size), y.view(-1))
+    if config.USE_BF16:
+        with autocast(dtype=torch.bfloat16):
+            logits = model(x)
+            loss = criterion(
+                logits.view(-1, model.vocab_size),
+                y.view(-1)
+            )
+    else:
+        logits = model(x)
+        loss = criterion(
+            logits.view(-1, model.vocab_size),
+            y.view(-1)
+        )
+
     torch.cuda.synchronize()
     mem_forward = torch.cuda.memory_allocated() / 1024**2
 
@@ -175,12 +189,12 @@ def find_max_batch_size(
     while bs <= max_bs:
         try:
             model = make_model_fn().to(device)
-            optimizer = torch.optim.Adam(model.parameters())
+            optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
 
             loader = DataLoader(
                 dataset,
                 batch_size=bs,
-                shuffle=True,
+                shuffle=False,
                 drop_last=True,
             )
             batch = next(iter(loader))
@@ -200,9 +214,43 @@ def find_max_batch_size(
             torch.cuda.empty_cache()
 
         except RuntimeError as e:
-            if "out of memory" in str(e).lower():
-                torch.cuda.empty_cache()
-                break
-            raise e
+            if "out of memory" not in str(e):
+                raise
+            break
+    
+    if last_ok is None:
+        raise RuntimeError("Even batch size 1 does not fit")
 
-    return last_ok
+    # binary search
+    low = last_ok
+    high = bs  # this is the first failing batch size
+
+    while high - low > 1:
+        mid = (low + high) // 2
+
+        try:
+            model = make_model_fn().to(device)
+            optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
+
+            loader = DataLoader(
+                dataset,
+                batch_size=mid,
+                shuffle=False,
+                drop_last=True,
+            )
+            batch = next(iter(loader))
+
+            train_step_fn(model, optimizer, criterion, batch, device)
+
+            low = mid  # it fits → go higher
+
+            del model, optimizer, loader
+            torch.cuda.empty_cache()
+
+        except RuntimeError as e:
+            if "out of memory" not in str(e):
+                raise
+            high = mid  # it OOMs → go lower
+            torch.cuda.empty_cache()
+
+    return low

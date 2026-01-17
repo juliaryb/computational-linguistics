@@ -8,8 +8,9 @@ from torch.utils.data import DataLoader
 import os
 import time
 import math
+from torch.cuda.amp import autocast
 
-# Import from our other files
+# Import from other files
 import config
 from tokenizer import ensure_char_tokenizer, ensure_spm_tokenizer, ensure_whitespace_tokenizer, ensure_pretrained_tokenizer
 from data import LanguageModelDataset
@@ -18,12 +19,15 @@ from model import LSTMModel, TransformerDecoderOnly
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+
 def train_epoch(model, dataloader, optimizer, criterion, device):
     """Runs one full epoch of training."""
     model.train()
     total_loss = 0.0
     start_time = time.time()
     
+    print("TRAIN: USE_BF16 =", config.USE_BF16)
+
     # Initialize hidden state at the beginning of the epoch
     # We detach it to prevent backpropping through all of time
     # LSTM needs hidden; Transformer doesn't
@@ -41,18 +45,32 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         # --- Forward pass ---
         optimizer.zero_grad()
         
-        if use_lstm:
-            # Detach the hidden state from the previous batch's history
-            hidden = (hidden[0].detach(), hidden[1].detach())
-            logits, hidden = model(x, hidden)             # (B, T, V)
-        else:
-            logits = model(x)                              # (B, T, V)
+        if config.USE_BF16:
+            with autocast(dtype=torch.bfloat16):
+                if use_lstm:
+                    # Detach the hidden state from the previous batch's history
+                    hidden = (hidden[0].detach(), hidden[1].detach())
+                    logits, hidden = model(x, hidden)             # (B, T, V)
+                else:
+                    logits = model(x)                              # (B, T, V)
 
-        # --- Compute Loss ---
-        # CrossEntropyLoss expects logits as (N, C) and labels as (N)
-        # We flatten the (batch_size, seq_len, vocab_size) and (batch_size, seq_len) tensors
-        loss = criterion(logits.view(-1, model.vocab_size), y.view(-1))
+                # --- Compute Loss ---
+                # CrossEntropyLoss expects logits as (N, C) and labels as (N)
+                # We flatten the (batch_size, seq_len, vocab_size) and (batch_size, seq_len) tensors
+                loss = criterion(logits.view(-1, model.vocab_size), y.view(-1))
         
+        else:
+            if use_lstm:
+                hidden = (hidden[0].detach(), hidden[1].detach())
+                logits, hidden = model(x, hidden)
+            else:
+                logits = model(x)
+
+            loss = criterion(
+                logits.view(-1, model.vocab_size),
+                y.view(-1)
+            )
+
         # --- Backward pass and optimization ---
         loss.backward()
         
@@ -112,9 +130,9 @@ def main():
     if config.TOKENIZER_TYPE == "char":
         tokenizer = ensure_char_tokenizer(train_data_path, tokenizer_path)
     elif config.TOKENIZER_TYPE == "spm":
-        tokenizer = ensure_spm_tokenizer(train_data_path, tokenizer_path, 8000)
+        tokenizer = ensure_spm_tokenizer(train_data_path, tokenizer_path, config.VOCAB_SIZE)
     elif config.TOKENIZER_TYPE == "wspc":
-        tokenizer = ensure_whitespace_tokenizer(train_data_path, tokenizer_path, 8000)
+        tokenizer = ensure_whitespace_tokenizer(train_data_path, tokenizer_path, config.VOCAB_SIZE)
     elif config.TOKENIZER_TYPE == "pre":
         tokenizer = ensure_pretrained_tokenizer()
     else:

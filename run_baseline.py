@@ -11,12 +11,21 @@ from tokenizer import ensure_spm_tokenizer
 from data import LanguageModelDataset
 from torch.utils.data import DataLoader
 from torch import nn
+import numpy as np
+import random
 
 from benchmark_utils import profile_one_training_step, find_max_batch_size
 
-def main():
+
+def run_one_technique(technique, run_tag, baseline_batch_size=None):
     device = config.DEVICE
-    print("Running BASELINE (FP32)")
+    print(f"\n=== Running technique: {technique['name']} ===")
+    
+    # 1. Set the global flag
+    config.USE_BF16 = technique["amp_bf16"]
+    config.USE_FLASH = technique["flash"]
+    config.WINDOW_SIZE = technique["window"]
+    config.USE_CKPT = technique["ckpt"]
 
     # --- Tokenizer ---
     tokenizer = ensure_spm_tokenizer(
@@ -37,6 +46,21 @@ def main():
     print(f"Number of training sequences: {len(train_ds)}")
     print(f"Number of validation sequences: {len(val_ds)}")
 
+    # --- setting random seed ---
+    seed = 9
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+    g = torch.Generator()
+    g.manual_seed(seed)
+
+    def seed_worker(worker_id):
+        worker_seed = seed + worker_id
+        np.random.seed(worker_seed)
+        random.seed(worker_seed)
+
     # --- Model ---
     def make_model():
         return TransformerDecoderOnly(
@@ -51,17 +75,19 @@ def main():
 
     criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_id)
 
-    print("Searching for max batch size (FP32)...")
-
-    max_batch_size = find_max_batch_size(
-        make_model_fn=make_model,
-        dataset=train_ds,
-        criterion=criterion,
-        device=device,
-        train_step_fn=profile_one_training_step,
-    )
-
-    print(f"Max batch size (FP32): {max_batch_size}")
+    if baseline_batch_size is None:
+        print("Searching for max batch size...")
+        max_batch_size = find_max_batch_size(
+            make_model_fn=make_model,
+            dataset=train_ds,
+            criterion=criterion,
+            device=device,
+            train_step_fn=profile_one_training_step,
+        )
+        print(f"Max batch size: {max_batch_size}")
+    else:
+        max_batch_size = baseline_batch_size
+        print(f"Using baseline batch size: {max_batch_size}")
 
     train_loader = DataLoader(
         train_ds,
@@ -69,6 +95,8 @@ def main():
         shuffle=True,
         drop_last=True,
         num_workers=config.NUM_WORKERS,
+        generator=g,
+        worker_init_fn=seed_worker,
         )
 
     val_loader = DataLoader(
@@ -77,6 +105,8 @@ def main():
         shuffle=False,
         drop_last=True,
         num_workers=config.NUM_WORKERS,
+        generator=g,
+        worker_init_fn=seed_worker,
     )
 
     model = make_model().to(device)
@@ -114,7 +144,10 @@ def main():
     )
 
     # --- LOG ---
-    out_csv = os.path.join(config.LOGS_DIR, "baseline_fp32.csv")
+    out_csv = os.path.join(
+    config.LOGS_DIR,
+    f"benchmark_{technique['name']}_{run_tag}.csv"
+    )
     with open(out_csv, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
@@ -140,10 +173,46 @@ def main():
             val_loss,
         ])
 
-    print("Baseline done.")
+    print(f"{technique['name']} done.")
     print(f"Mean step time: {mean_step_time:.4f}s")
     print(f"Peak memory: {peak_memory:.1f} MB")
     print(f"Val perplexity: {val_ppl:.2f}")
 
+    return max_batch_size
+
+
 if __name__ == "__main__":
-    main()
+    
+    TECHNIQUES = [
+        {"name": "fp32", "amp_bf16": False, "flash": False, "window": None, "ckpt": False},
+        {"name": "bf16", "amp_bf16": True,  "flash": False, "window": None, "ckpt": False},
+        # {"name": "fa2",  "amp_bf16": True,  "flash": True,  "window": None, "ckpt": False},
+        # {"name": "fa2_window", "amp_bf16": True, "flash": True, "window": 128, "ckpt": False},
+        # {"name": "bf16_ckpt", "amp_bf16": True, "flash": False, "window": None, "ckpt": True},
+    ]
+    
+    fp32_max_batch_size = None
+    
+    for tech in TECHNIQUES:
+        if tech["name"] == "fp32":
+            # FP32: only max-BS run
+            fp32_max_batch_size = run_one_technique(
+                technique=tech,
+                run_tag="max",
+                baseline_batch_size=None,
+            )
+
+        else:
+            # 1) same batch size as FP32
+            run_one_technique(
+                technique=tech,
+                run_tag="same_bs",
+                baseline_batch_size=fp32_max_batch_size,
+            )
+
+            # 2) max batch size for this technique
+            run_one_technique(
+                technique=tech,
+                run_tag="max",
+                baseline_batch_size=None,
+            )

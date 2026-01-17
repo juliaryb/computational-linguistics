@@ -100,6 +100,13 @@ EPOCHS        = 1
 BATCH_SIZE    = 16
 LEARNING_RATE = 1e-3
 
+# Different memory-optimization techniques for trianing
+USE_BF16 = False
+USE_FLASH = False
+WINDOW_SIZE = None
+USE_CKPT = False
+
+
 # sequence settings
 SEQ_LEN          = 256
 DEBUG_MAX_LINES  = None  # set to None for full data otherwise takes a subset of corpus

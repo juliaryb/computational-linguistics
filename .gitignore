@@ -216,3 +216,4 @@ tokenizers
 logs
 checkpoints
 lab3/lab3_logs
+lab4/flash*

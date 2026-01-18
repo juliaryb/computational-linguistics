@@ -140,7 +140,7 @@ def profile_one_training_step(
 
     # --- Forward ---
     if config.USE_BF16:
-        with autocast(dtype=torch.bfloat16):
+        with torch.amp.autocast("cuda", dtype=torch.bfloat16):
             logits = model(x)
             loss = criterion(
                 logits.view(-1, model.vocab_size),
@@ -158,16 +158,23 @@ def profile_one_training_step(
 
     # --- Backward ---
     loss.backward()
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
     torch.cuda.synchronize()
     mem_backward = torch.cuda.memory_allocated() / 1024**2
 
     optimizer.step()
+    # optimizer.zero_grad(set_to_none=True)
     torch.cuda.synchronize()
 
     step_time = time.time() - start
     peak_mem = torch.cuda.max_memory_allocated() / 1024**2
 
     return step_time, mem_forward, mem_backward, peak_mem
+
+
+def is_oom(e: BaseException) -> bool:
+    return isinstance(e, torch.OutOfMemoryError) or ("out of memory" in str(e).lower())
+
 
 def find_max_batch_size(
     make_model_fn,
@@ -199,13 +206,8 @@ def find_max_batch_size(
             )
             batch = next(iter(loader))
 
-            train_step_fn(
-                model=model,
-                optimizer=optimizer,
-                criterion=criterion,
-                batch=batch,
-                device=device,
-            )
+            for _ in range(5):  # a few runs to make the batch size more reliable for multiple training steps
+                train_step_fn(model, optimizer, criterion, batch, device)
 
             last_ok = bs
             bs *= 2
@@ -213,9 +215,10 @@ def find_max_batch_size(
             del model, optimizer, loader
             torch.cuda.empty_cache()
 
-        except RuntimeError as e:
-            if "out of memory" not in str(e):
+        except Exception as e:
+            if not is_oom(e):
                 raise
+            torch.cuda.empty_cache()
             break
     
     if last_ok is None:
@@ -240,17 +243,18 @@ def find_max_batch_size(
             )
             batch = next(iter(loader))
 
-            train_step_fn(model, optimizer, criterion, batch, device)
+            for _ in range(5):
+                train_step_fn(model, optimizer, criterion, batch, device)
 
             low = mid  # it fits → go higher
 
             del model, optimizer, loader
             torch.cuda.empty_cache()
 
-        except RuntimeError as e:
-            if "out of memory" not in str(e):
+        except Exception as e:
+            if not is_oom(e):
                 raise
-            high = mid  # it OOMs → go lower
             torch.cuda.empty_cache()
+            break
 
     return low

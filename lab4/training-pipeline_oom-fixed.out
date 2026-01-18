@@ -1,0 +1,62 @@
+/net/tscratch/people/plgjuliaryb
+On Athena
+/net/tscratch/people/plgjuliaryb/computational-linguistics-data
+Flash attention successfully imported
+
+=== Running technique: fp32 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size...
+Max batch size: 496
+TRAIN: USE_BF16 = False
+  > Train Epoch Time: 16.96s
+fp32 done.
+Mean step time: 0.2557s
+Peak memory: 33761.1 MB
+Val perplexity: 12277184.90
+
+=== Running technique: bf16 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Using baseline batch size: 496
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 9.38s
+bf16 done.
+Mean step time: 0.1380s
+Peak memory: 23086.5 MB
+Val perplexity: 12207525.59
+
+=== Running technique: bf16 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size...
+Max batch size: 512
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 14.39s
+bf16 done.
+Mean step time: 0.1347s
+Peak memory: 23828.6 MB
+Val perplexity: 9053137.33
+
+=== Running technique: fa2 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Using baseline batch size: 496
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 8.11s
+fa2 done.
+Mean step time: 0.0979s
+Peak memory: 20979.6 MB
+Val perplexity: 15326332.84
+
+=== Running technique: fa2 ===
+Number of training sequences: 28049
+Number of validation sequences: 24965
+Searching for max batch size...
+Max batch size: 896
+TRAIN: USE_BF16 = True
+  > Train Epoch Time: 7.15s
+fa2 done.
+Mean step time: 0.1674s
+Peak memory: 37852.0 MB
+Val perplexity: 497115787.62

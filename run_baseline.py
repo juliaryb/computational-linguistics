@@ -135,6 +135,14 @@ def run_one_technique(technique, run_tag, baseline_batch_size=None):
     mem_backward = sum(mem_backwards) / len(mem_backwards)
     peak_memory = max(peak_mems)
 
+    # TODO: reinitialise model to keep the same settings/starting points for every technique 
+
+    del model, optimizer
+    torch.cuda.empty_cache()
+
+    model = make_model().to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
+
     # --- FULL EPOCH ---
     train_loss, epoch_time = train_epoch(
         model, train_loader, optimizer, criterion, device
@@ -186,7 +194,7 @@ if __name__ == "__main__":
     TECHNIQUES = [
         {"name": "fp32", "amp_bf16": False, "flash": False, "window": None, "ckpt": False},
         {"name": "bf16", "amp_bf16": True,  "flash": False, "window": None, "ckpt": False},
-        # {"name": "fa2",  "amp_bf16": True,  "flash": True,  "window": None, "ckpt": False},
+        {"name": "fa2",  "amp_bf16": True,  "flash": True,  "window": None, "ckpt": False},
         # {"name": "fa2_window", "amp_bf16": True, "flash": True, "window": 128, "ckpt": False},
         # {"name": "bf16_ckpt", "amp_bf16": True, "flash": False, "window": None, "ckpt": True},
     ]

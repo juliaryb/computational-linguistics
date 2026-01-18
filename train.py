@@ -46,7 +46,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         optimizer.zero_grad()
         
         if config.USE_BF16:
-            with autocast(dtype=torch.bfloat16):
+            with torch.amp.autocast("cuda", dtype=torch.bfloat16):
                 if use_lstm:
                     # Detach the hidden state from the previous batch's history
                     hidden = (hidden[0].detach(), hidden[1].detach())
@@ -78,6 +78,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
         
         optimizer.step()
+        # optimizer.zero_grad(set_to_none=True)
         
         total_loss += loss.item()
         
@@ -100,22 +101,36 @@ def evaluate(model, dataloader, criterion, device):
 
     with torch.no_grad(): # disable gradient calculation
         for x, y in dataloader:
-            # if x.shape[0] != config.BATCH_SIZE:
-            #     continue
-                
             x, y = x.to(device), y.to(device)
 
-            if use_lstm:
-                hidden = (hidden[0].detach(), hidden[1].detach())
-                logits, hidden = model(x, hidden)
-            else:
-                logits = model(x)
+            if config.USE_BF16:
+                with torch.amp.autocast("cuda", dtype=torch.bfloat16):
+                    if use_lstm:
+                        hidden = (hidden[0].detach(), hidden[1].detach())
+                        logits, hidden = model(x, hidden)
+                    else:
+                        logits = model(x)
 
-            loss = criterion(logits.view(-1, model.vocab_size), y.view(-1))
+                    loss = criterion(
+                        logits.view(-1, model.vocab_size),
+                        y.view(-1)
+                    )
+            else:
+                if use_lstm:
+                    hidden = (hidden[0].detach(), hidden[1].detach())
+                    logits, hidden = model(x, hidden)
+                else:
+                    logits = model(x)
+
+                loss = criterion(
+                    logits.view(-1, model.vocab_size),
+                    y.view(-1)
+                )
+
             total_loss += loss.item()
 
     avg_loss = total_loss / len(dataloader)
-    perplexity = math.exp(avg_loss) # calculate perplexity
+    perplexity = math.exp(avg_loss)
     return avg_loss, perplexity
 
 

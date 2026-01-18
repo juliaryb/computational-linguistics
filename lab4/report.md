@@ -1,4 +1,5 @@
 # Course Task: Memory-Efficient Transformer Training Techniques
+## The experiments are implemented in run_baseline.py (in the main repo folder)
 
 - I don't have a GPU locally, so I had to setup things on Athena, it took a while
 - The setup works now - training complete on CUDA-enabled GPU

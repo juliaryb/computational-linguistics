@@ -5,6 +5,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 
 import config
 
@@ -151,17 +152,18 @@ class DecoderBlock(nn.Module):
         dropout_p = self.attn_dropout if self.training else 0.0
 
         # window_size=(-1, -1) = full attention
+        #   (W, 0)   = causal sliding-window (only lookback)
         window_size = (-1, -1)
         if getattr(config, "WINDOW_SIZE", None) is not None:
             ws = config.WINDOW_SIZE
             if ws is not None:
-                window_size = (ws, ws)
+                window_size = (ws, 0)
 
         attn_out = flash_attn_func(
             q, k, v,
             dropout_p=dropout_p,
-            causal=True,
-            window_size=window_size,
+            causal=True,                # lower-triangular mask -> "seeing the future"
+            window_size=window_size,    # see window_size tokens back, but no future ones
         )  # (B, T, H, D)
 
         attn_out = attn_out.reshape(B, T, C)   # merge heads
@@ -221,7 +223,16 @@ class TransformerDecoderOnly(nn.Module):
         key_padding_mask = (x == self.pad_id)     # (B, T), bool
 
         for blk in self.blocks:
-            h = blk(h, attn_mask=attn_mask, key_padding_mask=key_padding_mask)
+            # this adds gradient checkpointing
+            if getattr(config, "USE_CKPT", False) and self.training:
+                # checkpoint requires a function whose *inputs are tensors*
+                def custom_forward(h_):
+                    return blk(h_, attn_mask=attn_mask, key_padding_mask=key_padding_mask)
+
+                h = checkpoint(custom_forward, h, use_reentrant=False)
+            else:
+                h = blk(h, attn_mask=attn_mask, key_padding_mask=key_padding_mask)
+
         h = self.ln_f(h)                          # (B, T, C)
         logits = self.lm_head(h)                  # (B, T, V)
         return logits

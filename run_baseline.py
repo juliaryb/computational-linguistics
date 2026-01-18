@@ -135,11 +135,11 @@ def run_one_technique(technique, run_tag, baseline_batch_size=None):
     mem_backward = sum(mem_backwards) / len(mem_backwards)
     peak_memory = max(peak_mems)
 
-    # TODO: reinitialise model to keep the same settings/starting points for every technique 
-
+    # free memory
     del model, optimizer
     torch.cuda.empty_cache()
 
+    # reinitialise model to keep the same settings/init conditions for every technique 
     model = make_model().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
 
@@ -192,11 +192,13 @@ def run_one_technique(technique, run_tag, baseline_batch_size=None):
 if __name__ == "__main__":
     
     TECHNIQUES = [
-        {"name": "fp32", "amp_bf16": False, "flash": False, "window": None, "ckpt": False},
-        {"name": "bf16", "amp_bf16": True,  "flash": False, "window": None, "ckpt": False},
-        {"name": "fa2",  "amp_bf16": True,  "flash": True,  "window": None, "ckpt": False},
-        # {"name": "fa2_window", "amp_bf16": True, "flash": True, "window": 128, "ckpt": False},
-        # {"name": "bf16_ckpt", "amp_bf16": True, "flash": False, "window": None, "ckpt": True},
+        {"name": "fp32", "amp_bf16": False, "flash": False, "window": None, "ckpt": False},         # 0.
+        {"name": "bf16", "amp_bf16": True,  "flash": False, "window": None, "ckpt": False},         # 1.
+        {"name": "fa2",  "amp_bf16": True,  "flash": True,  "window": None, "ckpt": False},         # 2.
+        {"name": "fa2_win128", "amp_bf16": True, "flash": True, "window": 128, "ckpt": False},      # 3.
+        {"name": "fa2_win256", "amp_bf16": True, "flash": True, "window": 128, "ckpt": False},      # 3.
+        {"name": "fp32_ckpt", "amp_bf16": False, "flash": False, "window": None, "ckpt": True},     # 4.
+        {"name": "bf16_ckpt", "amp_bf16": True, "flash": False, "window": None, "ckpt": True},      # 4.
     ]
     
     fp32_max_batch_size = None

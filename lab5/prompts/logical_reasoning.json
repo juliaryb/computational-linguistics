@@ -1,0 +1,19 @@
+{
+  "task_name": "Logical Reasoning",
+  "description": "Use logical reasoning to solve the following problem clearly and correctly:",
+
+    "dev_examples": [
+    {
+      "input": "All mammals are animals. All dogs are mammals. Are all dogs animals?",
+      "output": "Yes. If all mammals are animals and all dogs are mammals, then all dogs are animals."
+    },
+    {
+      "input": "If a person studies hard, they will pass the exam. Alice studies hard. Will Alice pass the exam?",
+      "output": "Yes. Given that studying hard leads to passing the exam and Alice studies hard, Alice will pass the exam."
+    }
+  ],
+
+  "eval_example": {
+    "input": "All squares are rectangles. All rectangles have four sides. Can we conclude that all squares have four sides?"
+  }
+}

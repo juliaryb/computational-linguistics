@@ -1,0 +1,19 @@
+{
+  "task_name": "Factual Knowledge & Retrieval",
+  "description": "Answer the factual question accurately and concisely based on reliable sources of factual information:",
+
+  "dev_examples": [
+    {
+      "input": "What is the capital city of France?",
+      "output": "Paris."
+    },
+    {
+      "input": "Who wrote the novel '1984'?",
+      "output": "George Orwell."
+    }
+  ],
+
+  "eval_example": {
+    "input": "What element has the chemical symbol 'O'?"
+  }
+}

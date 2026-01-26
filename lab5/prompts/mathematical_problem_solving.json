@@ -1,0 +1,19 @@
+{
+  "task_name": "Mathematical Problem Solving",
+  "description": "Solve the mathematical problem and give the final answer:",
+
+  "dev_examples": [
+    {
+      "input": "If you have 3 apples and buy 2 more, how many apples do you have?",
+      "output": "You have 5 apples."
+    },
+    {
+      "input": "What is the result of 12 divided by 3?",
+      "output": "12 divided by 3 is 4."
+    }
+  ],
+
+    "eval_example": {
+    "input": "Start with the number 50. Subtract 12 three times. What number do you get?"
+  }
+}

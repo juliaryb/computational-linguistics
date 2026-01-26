@@ -1,0 +1,19 @@
+{
+  "task_name": "Language Understanding & Ambiguity",
+  "description": "Interpret the ambiguous sentence and explain its possible meanings:",
+
+  "dev_examples": [
+    {
+      "input": "I saw the man with the telescope.",
+      "output": "The sentence could mean that I used a telescope to see the man, or that I saw a man who was holding a telescope."
+    },
+    {
+      "input": "She didn't see her duck.",
+      "output": "This could mean that she did not notice her duck, or that she did not see her lower her head."
+    }
+  ],
+
+  "eval_example": {
+    "input": "When Emily spoke to Laura, she was upset."
+  }
+}

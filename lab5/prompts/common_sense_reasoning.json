@@ -1,0 +1,19 @@
+{
+  "task_name": "Common Sense Reasoning",
+  "description": "Answer the question using everyday common-sense reasoning of a responsible human (most probably not long and using common everyday knowledge):",
+
+  "dev_examples": [
+    {
+      "input": "If you put an ice cube on a plate and leave it in a warm room, what will happen after some time?",
+      "output": "The ice cube will melt because the room temperature is higher than the freezing point of ice."
+    },
+    {
+      "input": "Why do people usually wear jackets when it is cold outside?",
+      "output": "People wear jackets to keep warm because jackets help retain body heat and protect against cold temperatures."
+    }
+  ],
+
+  "eval_example": {
+    "input": "If someone leaves their phone outside overnight during heavy rain, why might the phone stop working the next day?"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "task_name": "Code Generation",
+  "description": "Generate correct and readable Python code to solve the following problem, provide just the code in your output:",
+
+  "dev_examples": [
+    {
+      "input": "Write a Python function that takes a list of numbers and returns the sum of all elements.",
+      "output": "def sum_list(numbers):\n    return sum(numbers)"
+    },
+    {
+      "input": "Write a Python function that checks whether a given string is a palindrome.",
+      "output": "def is_palindrome(s):\n    return s == s[::-1]"
+    }
+  ],
+
+  "eval_example": {
+    "input": "Write a Python function that takes a list of integers and returns a dictionary with two keys: 'even' and 'odd', mapping to lists of even and odd numbers respectively."
+  }
+}

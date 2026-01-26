@@ -1,0 +1,19 @@
+{
+  "task_name": "Instruction Following",
+  "description": "Follow the instructions exactly and respect all constraints.",
+
+  "dev_examples": [
+    {
+      "input": "Write exactly three words describing the weather.",
+      "output": "Cold windy morning"
+    },
+    {
+      "input": "Answer with only a single number: What is 7 plus 5?",
+      "output": "12"
+    }
+  ],
+
+  "eval_example": {
+    "input": "Write exactly two sentences. Each sentence must contain exactly five words."
+  }
+}

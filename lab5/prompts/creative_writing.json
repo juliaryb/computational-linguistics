@@ -1,0 +1,19 @@
+{
+  "task_name": "Creative Writing",
+  "description": "Write a short creative text following the given instructions:",
+
+  "dev_examples": [
+    {
+      "input": "Write a short story (3–4 sentences) about a lost key.",
+      "output": "The key lay forgotten at the bottom of the drawer, cold and silent. For days it waited as footsteps passed by. When it was finally found, the door opened easily, as if nothing had ever been wrong."
+    },
+    {
+      "input": "Write a short poem (3–4 lines) about rain in the city.",
+      "output": "Rain taps softly on the streets,\nNeon lights blur in shallow streams,\nFootsteps echo under grey skies."
+    }
+  ],
+
+  "eval_example": {
+    "input": "Write a short story (4–5 sentences) about a train that never arrives."
+  }
+}

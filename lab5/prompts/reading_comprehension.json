@@ -1,0 +1,20 @@
+{
+  "task_name": "",
+  "description": "Answer the question based only on the provided text.",
+
+
+  "dev_examples": [
+    {
+      "input": "Text: Anna went to the library to study for her exams. After studying for two hours, she met her friend for coffee.\n\nQuestion: Where did Anna go after studying?",
+      "output": "She went to meet her friend for coffee."
+    },
+    {
+      "input": "Text: Mark missed the bus because he woke up late. As a result, he arrived late to work.\n\nQuestion: Why did Mark arrive late to work?",
+      "output": "He arrived late because he missed the bus after waking up late."
+    }
+  ],
+
+  "eval_example": {
+    "input": "Text: The conference was scheduled to start at 9 a.m., but due to technical issues it began at 10 a.m. Many participants waited in the lobby until the sessions finally started.\n\nQuestion: Why did the conference start later than planned?"
+  }
+}

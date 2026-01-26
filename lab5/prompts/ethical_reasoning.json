@@ -1,0 +1,19 @@
+{
+  "task_name": "Ethical Reasoning & Nuance",
+  "description": "Analyze the following ethical scenario. Identify the main ethical issues, discuss relevant principles, and provide a balanced response and/or solution to the problem. Keep the answer concise but not simplified - do not assume that the reader knows formal principles of ethics.",
+
+  "dev_examples": [
+    {
+      "input": "A company discovers a serious security flaw in its product, but disclosing it immediately could cause financial damage. What should the company do?",
+      "output": "The company faces a conflict between financial interests and responsibility to users. Ethical principles such as non-maleficence and transparency suggest that protecting users should take priority. While disclosure may cause short-term losses, withholding information risks greater harm and loss of trust. A responsible approach would involve informing users while working to mitigate the issue."
+    },
+    {
+      "input": "A doctor must decide which of two patients receives a life-saving treatment when resources are limited. How should this decision be approached?",
+      "output": "This scenario involves ethical tension between fairness and maximizing benefit. Principles such as justice, medical need, and likelihood of recovery are often considered. No choice is ethically neutral, so transparent criteria and institutional guidelines are important. The decision should aim to minimize harm while respecting professional ethics."
+    }
+  ],
+
+  "eval_example": {
+    "input": "A university offers scholarships exclusively for women in STEM fields to address historical underrepresentation. Some students argue this promotes fairness and inclusion, while others claim it is discriminatory against equally qualified men. How should this policy be evaluated ethically?"
+  }
+}

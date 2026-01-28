@@ -32,6 +32,7 @@ Were there trade-offs (verbosity vs clarity)?
 
 
 # prompt engineering comment
+ I did somewhat of prompt engineering - just on the smaller model and then only tested alternative prompts if the initial ones didn't provide satisfactory results 
 “Prompt templates were refined using a small development set of 2–3 examples per task type. Initial prompts were adjusted to improve clarity and output format consistency (e.g. explicitly requesting concise answers or step-by-step reasoning). The final prompts were then fixed and applied to unseen evaluation examples.”
 
 Locally run:
@@ -56,4 +57,13 @@ python scripts/run_eval.py --task prompts/ethical_reasoning.json
 # Prompt engineering
 The final prompts (used in evaluation) are defined in `prompts/`. During the **prompt engineering** phase one or two alternative prompts were tested (on dev examples) and the one that provided the "nicest" output was added to the .json files in `prompts/` and were later applied to the validation examples.
 
+After reading the outputs I often had ideas for improved prompts - like for code I'd add "make sure it's efficient". 
+
+It's really difficult to score some outputs - like the ethical reasoning task - the scoring itself can be biased, so can the response. Similarly - scoring creative writing can easily become subjective (what we like more). Therefore, to obtain meaningful benchmarks, the scoring schemes would have to be refined and precise. And the prompts especially for few-shot learning should be optimised to what exactly we would consider the "perfect output.
+
+It's a difficult task because often we know what we expect from the output only once we've seen it - maybe that's how few-shot leanring could also be helpful to us - we have to imagine what the output we expect would be, so it might help us write a better prompt (e.g. describing how we want our code to be documented)
+
 # TODO: add a description of what happens in `run_eval.py`
+
+# limitations:
+- different runs would generate different prompts, so the evaluation might not be as accurate - maybe it would have to be averaged - a couple of runs per each task (like 5x one-shot for for example creative_writing.json) 

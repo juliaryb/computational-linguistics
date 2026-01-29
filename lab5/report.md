@@ -335,6 +335,7 @@ The empty string outputs were logged for the following tasks:
   </tbody>
 </table>
 </div>
+
 - The per-task results reveal differences in how model size and prompting strategy interact with task type. 
 - DeepSeek consistently achieves the highest scores on tasks that require multi-step reasoning or precise internal consistency, such as logical reasoning, mathematical problem solving, and code generation.
 - Ethical reasoning achieved the lowest score of all tasks (only for Qwen since the output was empty for Deepseek). This may be due to the evaluation being inherently subjective, but also reflects that ethical reasoning tasks may be sensitive to prompt phrasing.

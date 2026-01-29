@@ -104,25 +104,6 @@ def read_task_json(path: Path) -> Dict[str, Any]:
     return task
 
 
-def ensure_scores_csv(path: Path) -> None:
-    if path.exists():
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow([
-            "run_id",
-            "timestamp",
-            "task_name",
-            "model",
-            "strategy",
-            "criterion_1_score_0_3",
-            "criterion_2_score_0_3",
-            "criterion_3_score_0_3",
-            "total_0_9",
-            "notes"
-        ])
-
 
 def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -138,8 +119,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", required=True, help="Path to a single task JSON, e.g. prompts/ethical_reasoning.json")
     parser.add_argument("--out", default="results/raw.jsonl", help="JSONL output path (append). Default: results/raw.jsonl")
-    parser.add_argument("--scores", default="results/scores.csv", help="Scores CSV template path. Default: results/scores.csv")
-
+    
     # Models (defaults match your plan)
     parser.add_argument("--small_model", default="qwen2.5:1.5b", help="Standard small model for zero/few/cot.")
     parser.add_argument("--reasoning_model", default="deepseek-r1:7b", help="Reasoning model for zero/few (no cot).")
@@ -154,11 +134,8 @@ def main() -> None:
 
     task_path = Path(args.task)
     out_path = Path(args.out)
-    scores_path = Path(args.scores)
 
     task = read_task_json(task_path)
-
-    ensure_scores_csv(scores_path)
 
     # Build prompts per strategy
     strategy_builders = {
@@ -222,7 +199,6 @@ def main() -> None:
         print(f"[OK] {task['task_name']} | {model} | {strategy} | run_id={run_id} | {record['runtime_seconds']}s")
 
     print(f"\nWrote outputs to: {out_path}")
-    print(f"Scoring template at: {scores_path}")
 
 
 if __name__ == "__main__":

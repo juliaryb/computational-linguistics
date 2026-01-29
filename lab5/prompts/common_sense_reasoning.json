@@ -1,6 +1,6 @@
 {
   "task_name": "Common Sense Reasoning",
-  "description": "Answer the question using everyday common-sense reasoning of a responsible human (most probably not long and using common everyday knowledge):",
+  "description": "Answer the question using everyday common-sense reasoning of a responsible human (Answer the question using everyday common-sense reasoning of a responsible human (most probably not long and using common everyday knowledge):",
 
   "dev_examples": [
     {
